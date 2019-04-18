@@ -1,16 +1,39 @@
-var specOriginal = [
-  {name: "Global risk",    min: 0, max: 40, step: 2.5},
-  {name: "Household risk", min: 0, max: 20, step: 2},
-];
+var original = {
+  name: "TB Risks",
+  folder: "images/",
+  grids: ["TBgrid"],
+  parameters: [
+    {name: "Global risk",    min: 0, max: 40, step: 2.5},
+    {name: "Household risk", min: 0, max: 20, step: 2},
+  ],
+  digits: 3
+};
 
-var specTweaks = [
-  {name: "Global risk",          min: 0,      max: 60,     step: 10},
-  {name: "Household risk",       min: 0,      max: 60,     step: 10},
-  {name: 'P(Initial infection)', min: 0.4,    max: 0.5,    step: 0.05},
-  {name: 'Rate of progression',  min: 0.0035, max: 0.1035, step: 0.05}
-];
+var tweaks = {
+  name: "Tweaks",
+  folder: "tweaks/",
+  grids: ["TBgrid"],
+  parameters: [
+    {name: "Global risk",          min: 0,      max: 60,     step: 10},
+    {name: "Household risk",       min: 0,      max: 60,     step: 10},
+    {name: 'P(Initial infection)', min: 0.4,    max: 0.5,    step: 0.05},
+    {name: 'Rate of progression',  min: 0.0035, max: 0.1035, step: 0.05}],
+  digits: 3
+};
 
-var spec = [
+var progression = {
+  name: "Rapid vs Normal progression",
+  folder: "images_rf_progression/",
+  grids: ["TBgrid"],
+  parameters: [
+    {name: "Rapid progression rate", unit:"(events/yr)", min:0, max:0.15, step:0.025},
+    {name: "Normal progression rate", unit: "(events/yr)", min: 0.0035, max: 0.0535, step: 0.005}],
+  digits: 2
+}
+
+var newSpec = [original, tweaks, progression];
+
+var oldSpec = [
   {name: "Rapid progression rate", unit:"(events/yr)", min:0, max:0.15, step:0.025},
   {name: "Normal progression rate", unit: "(events/yr)", min: 0.0035, max: 0.0535, step: 0.005}
 ];
@@ -19,11 +42,12 @@ class GridViewer extends React.Component {
   constructor(props) {
     super(props);
 
-    this.spec = spec;
+    this.spec = newSpec;
     
-    this.state = { 
-      vals: this.spec.map(({min}) => min),
-      folderName: 'images_rf_progression/',
+    this.state = {
+      rangeIdx: 2,
+      vals: this.spec[2].parameters.map(({min}) => min),
+      folderName: this.spec[2].folder,
       imgNum: 1, 
       digits: 2
     };
@@ -34,9 +58,17 @@ class GridViewer extends React.Component {
   handleChange(e) {
     e.preventDefault();
 
+    const range = this.spec[this.state.rangeIdx];
+    const params = range.parameters;
+
     var calcImgNum = function(vals) {
 
-      var lengths = spec.map(({min, max, step}) => (max-min)/step + 1);
+      // const range = this.spec[this.state.rangeIdx];
+      // const params = range.parameters;
+
+      var lengths = params.map(
+        ({min, max, step}) => (max-min)/step + 1
+      );
       lengths.unshift(1);
       lengths.pop();
       
@@ -44,7 +76,7 @@ class GridViewer extends React.Component {
         return arr.slice(0, idx+1).reduce(((acc, cv) => acc*cv), 1);
       });
 
-      const indices = vals.map((val, idx) => (val - spec[idx].min)/spec[idx].step);
+      const indices = vals.map((val, idx) => (val - params[idx].min)/params[idx].step);
 
       const possiblyFloating = indices.reduce(((acc, cv, idx) => acc + multipliers[idx]*cv), 1);
 
@@ -62,7 +94,7 @@ class GridViewer extends React.Component {
   }
 
   render() {
-    const sliderContainers = this.spec.map((param, idx) =>
+    const sliderContainers = this.spec[2].parameters.map((param, idx) =>
       <SliderContainer name={param.name}
                        unit={param.unit}
                        min= {param.min} 
