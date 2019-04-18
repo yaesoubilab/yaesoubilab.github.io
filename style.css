@@ -18,3 +18,8 @@ img.grid {
 	margin-left: 10px;
 	width: 90%;
 }
+
+.unit {
+    margin-bottom: 1em;
+    margin-top: -1em;
+}
