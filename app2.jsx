@@ -46,16 +46,18 @@ class GridViewer extends React.Component {
     
     this.state = {
       rangeIdx: 2,
+      gridName: ["TBgrid"],
       vals: this.spec[2].parameters.map(({min}) => min),
       folderName: this.spec[2].folder,
       imgNum: 1, 
       digits: 2
     };
     
-    this.handleChange = this.handleChange.bind(this);
+    this.handleSliderChange = this.handleSliderChange.bind(this);
+    this.handleRangeChange = this.handleRangeChange.bind(this);
   }
 
-  handleChange(e) {
+  handleSliderChange(e) {
     e.preventDefault();
 
     const range = this.spec[this.state.rangeIdx];
@@ -63,12 +65,7 @@ class GridViewer extends React.Component {
 
     var calcImgNum = function(vals) {
 
-      // const range = this.spec[this.state.rangeIdx];
-      // const params = range.parameters;
-
-      var lengths = params.map(
-        ({min, max, step}) => (max-min)/step + 1
-      );
+      var lengths = params.map(({min, max, step}) => (max-min)/step + 1);
       lengths.unshift(1);
       lengths.pop();
       
@@ -93,8 +90,26 @@ class GridViewer extends React.Component {
     this.setState({ imgNum: calcImgNum(vals) });
   }
 
+  handleRangeChange(e) {
+    e.preventDefault();
+
+    const idx = e.target.id;
+
+    this.setState({
+      rangeIdx: idx, 
+      vals: this.spec[idx].parameters.map(({min}) => min),
+      folderName: this.spec[idx].folder,
+      imgNum: 1,
+      digits: this.spec[idx].digits
+    });
+  }
+
   render() {
-    const sliderContainers = this.spec[2].parameters.map((param, idx) =>
+    const rangeIdx = this.state.rangeIdx;
+    const range = this.spec[rangeIdx];
+    const handleRangeChange = this.handleRangeChange;
+
+    const sliderContainers = range.parameters.map((param, idx) =>
       <SliderContainer name={param.name}
                        unit={param.unit}
                        min= {param.min} 
@@ -102,14 +117,28 @@ class GridViewer extends React.Component {
                        step={param.step} 
                        id={idx}
                        value={this.state.vals[idx]} 
-                       handleChange={this.handleChange}
+                       handleChange={this.handleSliderChange}
                        key={idx}/>
     );
+
+    const rangeSelectors = this.spec.map(function({name}, idx) {
+      var buttonNames = "pure-button";
+      buttonNames = buttonNames + ((idx == rangeIdx) ? " pure-button-disabled" : " pure-button-primary");
+
+      return (
+        <button className={buttonNames} key={idx} id={idx} onClick={handleRangeChange}>
+          {name}
+        </button>
+      );
+    });
 
     return (
       <div className="pure-g">
         <div className="pure-u-1-6">
           <div className="sidebar">
+            <form>
+              {rangeSelectors}
+            </form>
             <form>
               {sliderContainers}
             </form>
@@ -119,7 +148,8 @@ class GridViewer extends React.Component {
         <div className="pure-u-5-6">
           <GridImage folderName={this.state.folderName}
                      imgNum={this.state.imgNum}
-                     digits={this.state.digits} />
+                     digits={this.state.digits}
+                     gridName={this.state.gridName} />
         </div>
       </div>
     );
@@ -135,7 +165,7 @@ class GridImage extends React.Component {
     var num = pad(this.props.imgNum, this.props.digits);
     return (
       <div className="content">
-        <img src={this.props.folderName + "TBgrid_" + num + ".png"}
+        <img src={this.props.folderName + this.props.gridName + "_" + num + ".png"}
              className="grid"/>
       </div>
     );
