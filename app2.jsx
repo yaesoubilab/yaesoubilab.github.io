@@ -26,7 +26,21 @@ const progression = {
     {name: "Normal progression rate", unit: "(events/yr)", min: 0.0035, max: 0.0535, step: 0.005}]
 }
 
-const spec = [tweaks, progression];
+const initialization = {
+  name: "New initialization technique",
+  folder: "img/initialization/",
+  grids: ["tbGrid", "hivGrid", "demographicGrid"],
+  time: 'hot off the press',
+  version: 'the new one',
+  rangefile: 'rf_initialization',
+  digits: 2,
+  parameters: [
+    {name: "Init probability of any TB", min: 0.3, max: 0.6, step: 0.05},
+    {name: "Init probability of active TB", min: 0.03, max: 0.11, step: 0.01}
+  ]
+}
+
+const spec = [tweaks, progression, initialization];
 
 class GridViewer extends React.Component {
   constructor(props) {
