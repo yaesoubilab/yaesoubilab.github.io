@@ -192,7 +192,7 @@ class GridViewer extends React.Component {
                  id={idx} 
                  defaultChecked={checked} 
                  onChange={handleRangeChange}/>
-          <label htmlFor={idx}>{name} [{version}] {time}</label>
+          <label className="rangeLabel" htmlFor={idx}>{name} [{version}] {time}</label>
         </div>
       );
     });

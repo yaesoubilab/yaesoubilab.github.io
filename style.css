@@ -58,3 +58,13 @@ input.slider {
     width: 90%;
     margin: 1em;
 }
+
+.rangeSelector {
+    padding: 1em;
+}
+
+label.rangeLabel {
+    padding: 1em;
+    color: white;
+    text-transform: uppercase;
+}
