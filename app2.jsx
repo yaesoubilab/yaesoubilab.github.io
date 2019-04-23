@@ -1,23 +1,29 @@
 const tweaks = {
   name: "Expansive",
-  folder: "img/tweaks/",
-  grids: ["TBgrid"],
+  folder: "img/tweaks_multi/",
+  grids: ["tbGrid", "hivGrid", "demographicGrid"],
+  time: '2019-04-17 15:57:20.266423000 -0400',
+  version: '9e261df',
+  rangefile: 'rangefile_tweaks',
+  digits: 3,
   parameters: [
     {name: "Global risk",          min: 0,      max: 60,     step: 10},
     {name: "Household risk",       min: 0,      max: 60,     step: 10},
     {name: 'P(Initial infection)', min: 0.4,    max: 0.5,    step: 0.05},
-    {name: 'Rate of progression',  min: 0.0035, max: 0.1035, step: 0.05}],
-  digits: 3
+    {name: 'Rate of progression',  min: 0.0035, max: 0.1035, step: 0.05}]
 };
 
 const progression = {
   name: "Rapid vs Normal progression",
-  folder: "img/progression/",
-  grids: ["TBgrid"],
+  folder: "img/progression_multi/",
+  grids: ["tbGrid", "hivGrid", "demographicGrid"],
+  time: '2019-04-18 10:29:28.945783000 -0400',
+  version: '9e261df',
+  rangefile: 'rf_progression',
+  digits: 2,
   parameters: [
     {name: "Rapid progression rate", unit:"(events/yr)", min:0, max:0.15, step:0.025},
-    {name: "Normal progression rate", unit: "(events/yr)", min: 0.0035, max: 0.0535, step: 0.005}],
-  digits: 2
+    {name: "Normal progression rate", unit: "(events/yr)", min: 0.0035, max: 0.0535, step: 0.005}]
 }
 
 const spec = [tweaks, progression];
@@ -33,14 +39,13 @@ class GridViewer extends React.Component {
       rangeIdx:   initialRangeIdx,
       gridName:   this.spec[initialRangeIdx].grids[0],
       vals:       this.spec[initialRangeIdx].parameters.map(({min}) => min),
-      folderName: this.spec[initialRangeIdx].folder, // May NOT need this in state
       imgNum:     1, // Probably will keep, but do not strictly need
-      digits:     this.spec[initialRangeIdx].digits // May NOT need this in state
     };
     
     // The two event handlers that deal with sliders and buttons
-    this.handleSliderChange = this.handleSliderChange.bind(this);
     this.handleRangeChange = this.handleRangeChange.bind(this);
+    this.handleGridChange = this.handleGridChange.bind(this);
+    this.handleSliderChange = this.handleSliderChange.bind(this);
   }
 
   handleSliderChange(e) {
@@ -100,17 +105,23 @@ class GridViewer extends React.Component {
     e.preventDefault();
 
     // The index of the range to display
-    const idx = e.target.id;
+    const idx = e.target.value;
 
     // Reset the sliders to their minumums, the image to the first one
     // in the series, and other state that must be updated.
     this.setState({
       rangeIdx: idx, 
       vals: this.spec[idx].parameters.map(({min}) => min),
-      folderName: this.spec[idx].folder,
       imgNum: 1,
-      digits: this.spec[idx].digits
     });
+  }
+
+  handleGridChange(e) {
+    e.preventDefault();
+
+    const idx = e.target.id;
+
+    this.setState({gridName: this.spec[this.state.rangeIdx].grids[idx]});
   }
 
   render() {
@@ -134,36 +145,43 @@ class GridViewer extends React.Component {
 
     // Use CSS classes to create the button toggle effect. Probably,
     // there is a much more elegant way to do this using React
-    const rangeSelectors = this.spec.map(function({name}, idx) {
+    const rangeSelectors = this.spec.map(function({name, version, time}, idx) {
       var buttonNames = "pure-button";
       buttonNames = buttonNames + ((idx == rangeIdx) ? " pure-button-disabled" : " pure-button-primary");
 
       return (
-        <button className={buttonNames} key={idx} id={idx} onClick={handleRangeChange}>
-          {name}
-        </button>
+        <option key={idx} value={idx}>
+          {name} [{version}] {time}
+        </option>
       );
     });
 
     // imgNum can be used to debug which image is being displayed
     return (
       <div className="pure-g">
-        <div className="pure-u-1-6">
+        <div className="pure-u-1-5">
           <div className="sidebar">
-            <form>
-              {rangeSelectors}
+            <h1>TBABM RangeViewer</h1>
+            <form className="pure-form rangeSelector">
+              <select value={rangeIdx} onChange={handleRangeChange} className="pure-input-1-1">
+                {rangeSelectors}
+              </select>
             </form>
+            {/*<RunDescription spec={this.spec} rangeIdx={this.state.rangeIdx} />*/}
+            <GridSelector spec={this.spec}
+                          rangeIdx={this.state.rangeIdx}
+                          gridName={this.state.gridName}
+                          onChange={this.handleGridChange}/>
             <form>
               {sliderContainers}
             </form>
             {/*<b>imgNum: {this.state.imgNum}</b><br/>*/}
           </div>
         </div>
-        <div className="pure-u-5-6">
-          {/* This should be simplified so that it just passes the url of the image*/}
-          <GridImage folderName={this.state.folderName}
+        <div className="pure-u-4-5">
+          <GridImage spec={this.spec}
                      imgNum={this.state.imgNum}
-                     digits={this.state.digits}
+                     rangeIdx={this.state.rangeIdx}
                      gridName={this.state.gridName} />
         </div>
       </div>
@@ -176,18 +194,37 @@ function pad(num, digits) {
   return ('000000000' + num).substr(-digits);   
 }
 
-
-class GridImage extends React.Component { 
+class GridSelector extends React.Component {
   render() {
-    var num = pad(this.props.imgNum, this.props.digits);
+    const range = this.props.spec[this.props.rangeIdx];
+
+    const gridButtons = range.grids.map((gridName, idx) =>
+      <button className={"pure-button" + (this.props.gridName == gridName ? " pure-button-active":"")}
+              key={idx}
+              id={idx}
+              onClick={this.props.onChange}>{gridName}</button>
+    );
+
     return (
-      <div className="content">
-        <img src={this.props.folderName + this.props.gridName + "_" + num + ".png"}
-             className="grid"/>
+      <div className="pure-button-group gridSelector">
+        {gridButtons}
       </div>
     );
   }
 }
+
+// class RunDescription extends React.Component {
+//   render() {
+//     const range = this.props.spec[this.props.rangeIdx]
+
+//     return (
+//       <div className="runDescription">
+//         <div>time: {range.time}</div>
+//         <div>version: {range.version}</div>
+//       </div>
+//     );
+//   }
+// }
 
 class SliderContainer extends React.Component {
   render() {
@@ -199,7 +236,8 @@ class SliderContainer extends React.Component {
 
     return (
       <div className="sliderContainer">
-        <h2>{this.props.name}: {this.props.value}</h2>
+        <h1>{this.props.value}</h1>
+        <h2>{this.props.name}</h2>
         <div className="unit">{this.props.unit}</div>
         <Slider id={this.props.id} slider={slider} value={this.props.value} handleChange={this.props.handleChange}/>
       </div>
@@ -223,8 +261,50 @@ class Slider extends React.Component {
     var step = this.props.slider.step;
     var value = this.props.value;
 
-    return (<input id={id} type="range" min={min} max={max} step={step} style={{width: "350px"}}
-                   onChange={this.props.handleChange} value={value}/>);
+    const steps = Array(parseInt((max-min)/step) + 1).fill(min).map((val, idx) => val + idx*step);
+
+    const ticks = steps.map((stepVal) => <option key={stepVal} value={stepVal}/>);
+
+    return (
+      <div>
+        <datalist id={"tickmarks_"+id}>
+          {ticks}
+        </datalist>
+        <input id={id}
+               type="range"
+               className="slider"
+               min={min} 
+               max={max} 
+               step={step} 
+               onChange={this.props.handleChange}
+               value={value}
+               list={"tickmarks_"+id}/>
+      </div>);
+  }
+}
+
+class GridImage extends React.Component {
+
+  render() {
+    const gridSpec = this.props.spec[this.props.rangeIdx];
+    console.log(gridSpec);
+    const num      = pad(this.props.imgNum, gridSpec.digits);
+
+    const imgSrc_lg    = gridSpec.folder + this.props.gridName + "_" + "lg" + "_" + num + ".png";
+    const imgSrc_sm    = gridSpec.folder + this.props.gridName + "_" + "sm" + "_" + num + ".png";
+    const imgSrc_sm_2x = gridSpec.folder + this.props.gridName + "_" + "sm_2x" + "_" + num + ".png";
+
+    const sm_src = imgSrc_sm + " " + imgSrc_sm_2x + " 2x";
+
+    return (
+      <div className="content">
+        <picture>
+          <source media="(min-width: 2500px)" srcSet={imgSrc_lg}/>
+          <source media="(min-width: 1280px)" srcSet={sm_src}/>
+          <img src={imgSrc_sm} className="grid" sty/>
+        </picture>
+      </div>
+    );
   }
 }
 

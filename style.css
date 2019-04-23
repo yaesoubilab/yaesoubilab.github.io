@@ -1,10 +1,19 @@
+body {
+    background-color: #ebf5ff;
+}
+
 .sidebar {
     background: rgb(61, 79, 93);
-    color: #fff;
     position: fixed;
     top: 0;
     bottom: 0;
-    padding: 1em;
+    width: 20%;
+    padding: 0;
+}
+
+.sidebar h1 {
+    padding: 0.7em;
+    color: #ececec;
 }
 
 .content {
@@ -16,10 +25,36 @@ img.grid {
 	position: absolute;
 
 	margin-left: 10px;
-	width: 90%;
+	/*width: 90%;*/
 }
 
 .unit {
     margin-bottom: 1em;
     margin-top: -1em;
+}
+
+.sliderContainer {
+    color: #fff;
+    background-color: rgb(88, 115, 135);
+    /*padding: 1em;*/
+    margin-top: 1em;
+}
+
+.sliderContainer h1 {
+    padding: 1em;
+    background-color: #6990ae;
+}
+
+.sliderContainer h2, h3, .unit {
+    padding: 0.5em 1em 0em 1em;
+    margin: 0;
+}
+
+.gridSelector, .rangeSelector, .runDescription {
+    margin: 0.7em;
+}
+
+input.slider {
+    width: 90%;
+    margin: 1em;
 }
