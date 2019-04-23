@@ -41,16 +41,16 @@ img.grid {
 }
 
 .sliderContainer h1 {
-    padding: 1em;
+    padding: 0.3em 1em 0.3em 1em;
     background-color: #6990ae;
 }
 
 .sliderContainer h2, h3, .unit {
-    padding: 0.5em 1em 0em 1em;
+    padding: 0em 1em 0em 1em;
     margin: 0;
 }
 
-.gridSelector, .rangeSelector, .runDescription {
+.gridSelector, .rangeSelectors, .runDescription {
     margin: 0.7em;
 }
 
